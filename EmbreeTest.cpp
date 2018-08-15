@@ -1,7 +1,7 @@
 #include "EmbreeTest.h"
 
-#include <windows.h>
-#include <gl/GL.h>
+#include "../common/algorithms/parallel_for.h"
+#include "../common/tasking/taskschedulertbb.h"
 
 
 
@@ -39,6 +39,22 @@ EmbreeTest::~EmbreeTest()
 {
 }
 
+void EmbreeTest::InitWindow()
+{
+
+    glfwInit();
+    glewInit();
+
+
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+    window_ = glfwCreateWindow(mode->width, mode->height, "embree3 test", monitor, nullptr);
+}
+
 void EmbreeTest::InitDevice()
 {
     device_ = rtcNewDevice(rtcore_.c_str());
@@ -65,61 +81,25 @@ void EmbreeTest::InitGeometry()
 void EmbreeTest::Render()
 {
 
-    for (int h = 0; h < height_; h += TILE_SIZE_Y) {
-        for (int w = 0; w < width_; w += TILE_SIZE_X) {
+    const int numTilesX = (width_ + TILE_SIZE_X - 1) / TILE_SIZE_X;
+    const int numTilesY = (height_ + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
+    parallel_for(size_t(0), size_t(numTilesX*numTilesY), [&](const range<size_t>& range) {
+        const int threadIndex = (int)TaskScheduler::threadIndex();
+        for (size_t i = range.begin(); i<range.end(); i++)
+            renderTileStandard((int)i, threadIndex, pixels_, width_, height_, v1_, v2_, numTilesX, numTilesY);
+    });
 
-            const int numTilesX = (width_ + TILE_SIZE_X - 1) / TILE_SIZE_X;
-            const int numTilesY = (height_ + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
+    //glDrawPixels(width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
 
-            const unsigned int tileY = taskIndex / numTilesX;
-            const unsigned int tileX = taskIndex - tileY * numTilesX;
-            const unsigned int x0 = tileX * TILE_SIZE_X;
-            const unsigned int x1 = glm::min(x0 + TILE_SIZE_X, width_);
-            const unsigned int y0 = tileY * TILE_SIZE_Y;
-            const unsigned int y1 = min(y0 + TILE_SIZE_Y, height_);
+    //glfwSwapBuffers(window_);
 
-            Ray rays[TILE_SIZE_X*TILE_SIZE_Y];
-
-            /* generate stream of primary rays */
-            int N = 0;
-            for (unsigned int y = y0; y<y1; y++) for (unsigned int x = x0; x<x1; x++)
-            {
-                /* ISPC workaround for mask == 0 */
-
-
-                RandomSampler sampler;
-                RandomSampler_init(sampler, x, y, 0);
-
-                /* initialize ray */
-                Ray& ray = rays[N++];
-                bool mask = 1; { // invalidates inactive rays
-                    ray.tnear() = mask ? 0.0f : (float)(pos_inf);
-                    ray.tfar = mask ? (float)(inf) : (float)(neg_inf);
-                }
-                init_Ray(ray, Vec3fa(camera.xfm.p), Vec3fa(normalize((float)x*camera.xfm.l.vx + (float)y*camera.xfm.l.vy + camera.xfm.l.vz)), ray.tnear(), ray.tfar, RandomSampler_get1D(sampler));
-
-                RayStats_addRay(stats);
-            }
-            
-            
-        }
-    }
-
-
-
-
-#pragma omp parallel for
-
-
-
-
-
-    glDrawPixels(width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    std::cout << "draw \n";
 
 }
 
 void EmbreeTest::Init()
 {
+    InitWindow();
     InitDevice();
     InitScene();
     InitGeometry();
@@ -222,6 +202,79 @@ unsigned int EmbreeTest::addGroundPlane(RTCScene scene_i)
     unsigned int geomID = rtcAttachGeometry(scene_i, mesh);
     rtcReleaseGeometry(mesh);
     return geomID;
+}
+
+void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels, const unsigned int width, const unsigned int height, const Vec3fa & v1, const Vec3fa & v2, const int numTilesX, const int numTilesY)
+{
+
+    const unsigned int tileY = taskIndex / numTilesX;
+    const unsigned int tileX = taskIndex - tileY * numTilesX;
+    const unsigned int x0 = tileX * TILE_SIZE_X;
+    const unsigned int x1 = glm::min(x0 + TILE_SIZE_X, width_);
+    const unsigned int y0 = tileY * TILE_SIZE_Y;
+    const unsigned int y1 = min(y0 + TILE_SIZE_Y, height_);
+
+    Ray rays[TILE_SIZE_X*TILE_SIZE_Y];
+
+    /* generate stream of primary rays */
+    int N = 0;
+    for (unsigned int y = y0; y<y1; y++) for (unsigned int x = x0; x<x1; x++)
+    {
+        /* ISPC workaround for mask == 0 */
+
+
+        /* initialize ray */
+        Ray& ray = rays[N++];
+        bool mask = 1; { // invalidates inactive rays
+            ray.tnear() = mask ? 0.0f : (float)(pos_inf);
+            ray.tfar = mask ? (float)(inf) : (float)(neg_inf);
+        }
+        init_Ray(ray, v1, Vec3fa(0, 2, 6), ray.tnear(), ray.tfar, y*x);
+
+    }
+
+
+    RTCIntersectContext context;
+    rtcInitIntersectContext(&context);
+
+    /* trace stream of rays */
+    rtcIntersect1M(scene_, &context, (RTCRayHit*)&rays[0], N, sizeof(Ray));
+
+
+    /* shade stream of rays */
+    N = 0;
+    for (unsigned int y = y0; y<y1; y++) for (unsigned int x = x0; x<x1; x++)
+    {
+        /* ISPC workaround for mask == 0 */
+
+        Ray& ray = rays[N++];
+
+        /* eyelight shading */
+        Vec3fa color = Vec3fa(0.0f);
+        if (ray.geomID != RTC_INVALID_GEOMETRY_ID)
+        {
+            Vec3fa diffuse = face_colors[ray.primID];
+            color = color + diffuse * 0.5f;
+            Vec3fa lightDir = normalize(Vec3fa(-1, -1, -1));
+
+            /* initialize shadow ray */
+            Ray shadow(ray.org + ray.tfar*ray.dir, Vec3f(-1.0f, -1.0f, -1.0f), 0.001f, inf, 0.0f);
+
+            /* trace shadow ray */
+            rtcOccluded1(scene_, &context, (RTCRay*)&shadow);
+
+            /* add light contribution */
+            if (shadow.tfar >= 0.0f)
+                color = color + diffuse * clamp(-dot(lightDir, normalize(ray.Ng)), 0.0f, 1.0f);
+        }
+
+        /* write color to framebuffer */
+        unsigned int r = (unsigned int)(255.0f * clamp(color.x, 0.0f, 1.0f));
+        unsigned int g = (unsigned int)(255.0f * clamp(color.y, 0.0f, 1.0f));
+        unsigned int b = (unsigned int)(255.0f * clamp(color.z, 0.0f, 1.0f));
+        pixels[y*width + x] = (b << 16) + (g << 8) + r;
+    }
+
 }
 
 

@@ -1,5 +1,9 @@
 #pragma once
 
+#define TASKING_TBB
+#define __SSE__
+
+
 #include "embree3/rtcore.h"
 #include "embree3/rtcore_scene.h"
 #include "embree3/rtcore_buffer.h"
@@ -8,8 +12,11 @@
 #include "embree3/rtcore_geometry.h"
 #include "embree3/rtcore_device.h"
 
-#include "../common/math/vec3fa.h"
 #include "../common/math/vec3.h"
+#include "../common/math/vec3fa.h"
+
+#include "GL/glew.h"
+#include <glfw/glfw3.h>
 
 #include <string>
 #include "glm/glm.hpp"
@@ -29,12 +36,8 @@ public:
     EmbreeTest();
     ~EmbreeTest();
 
-    void InitDevice();
-    void InitScene();
-    void InitGeometry();
-    void Render();
-
     void Init();
+    void Render();
 
 private:
     void* alignedMalloc(size_t size, size_t align);
@@ -42,6 +45,11 @@ private:
     unsigned int addCube(RTCScene scene_i);
 
     unsigned int addGroundPlane(RTCScene scene_i);
+
+    void InitWindow();
+    void InitDevice();
+    void InitScene();
+    void InitGeometry();
 
 private:
     /*! Ray structure. */
@@ -54,9 +62,9 @@ private:
         *  has to be smaller than far. */
         __forceinline Ray(const embree::Vec3fa& org,
             const embree::Vec3fa& dir,
-            float tnear = embree::zero,
-            float tfar = embree::inf,
-            float time = embree::zero,
+            float tnear = 0,
+            float tfar = 1000000,
+            float time = 0,
             int mask = -1,
             unsigned int geomID = RTC_INVALID_GEOMETRY_ID,
             unsigned int primID = RTC_INVALID_GEOMETRY_ID,
@@ -91,6 +99,34 @@ private:
 
     };
 
+
+    __forceinline void init_Ray(Ray &ray,
+        const embree::Vec3fa& org,
+        const embree::Vec3fa& dir,
+        float tnear = 0,
+        float tfar = 1000000,
+        float time = 0,
+        int mask = -1,
+        unsigned int geomID = RTC_INVALID_GEOMETRY_ID,
+        unsigned int primID = RTC_INVALID_GEOMETRY_ID,
+        unsigned int instID = RTC_INVALID_GEOMETRY_ID)
+    {
+        ray = Ray(org, dir, tnear, tfar, time, mask, geomID, primID, instID);
+    }
+
+
+    void renderTileStandard(int taskIndex,
+        int threadIndex,
+        int* pixels,
+        const unsigned int width,
+        const unsigned int height,
+        const Vec3fa& v1,
+        const Vec3fa& v2,
+        const int numTilesX,
+        const int numTilesY);
+
+
+
 private:
     RTCDevice device_;
 
@@ -102,11 +138,16 @@ private:
 
     Vec3fa* vertex_colors = nullptr;
 
+    Vec3fa v1_;
+
+    Vec3fa v2_;
 
     unsigned int width_ = 800;
 
     unsigned int height_ = 600;
 
-    unsigned* pixels;
+    int* pixels_;
+
+    GLFWwindow* window_;
 
 };

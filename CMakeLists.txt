@@ -8,12 +8,16 @@ include_directories(
 ${DEPS}/glfw/include 
 ${DEPS}/glm
 ${DEPS}
-${DEPS}/embree/include
+${DEPS}/embree_3.0/include
+${DEPS}/tbb/include
+${DEPS}/glew-1.12.0/include
 )
 
 link_directories(
 ${DEPS}/glfw/lib
-${DEPS}/embree/lib
+${DEPS}/embree_3.0/lib
+${DEPS}/tbb/lib/intel64/vc14
+${DEPS}/glew-1.12.0/lib/Debug/x64
 )
 
 FIND_PACKAGE(OpenGL)
@@ -30,6 +34,8 @@ target_link_libraries(
 embree3_test 
 embree3
 glfw3
+tbb
+glew32d
 )
 
 
