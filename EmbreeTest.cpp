@@ -94,23 +94,6 @@ void EmbreeTest::InitGeometry()
     addGroundPlane(scene_);
 }
 
-void EmbreeTest::Render()
-{
-
-    const int numTilesX = (width_ + TILE_SIZE_X - 1) / TILE_SIZE_X;
-    const int numTilesY = (height_ + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
-    parallel_for(size_t(0), size_t(numTilesX*numTilesY), [&](const range<size_t>& range) {
-        const int threadIndex = (int)TaskScheduler::threadIndex();
-        for (size_t i = range.begin(); i<range.end(); i++)
-            renderTileStandard((int)i, threadIndex, (int*)pixels_, width_, height_, v1_, v2_, numTilesX, numTilesY);
-    });
-
-    glDrawPixels(width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
-
-    glfwSwapBuffers(window_);
-
-}
-
 void EmbreeTest::Init()
 {
     InitWindow();
@@ -231,6 +214,23 @@ unsigned int EmbreeTest::addGroundPlane(RTCScene scene_i)
     return geomID;
 }
 
+void EmbreeTest::Render()
+{
+
+    const int numTilesX = (width_ + TILE_SIZE_X - 1) / TILE_SIZE_X;
+    const int numTilesY = (height_ + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
+    parallel_for(size_t(0), size_t(numTilesX*numTilesY), [&](const range<size_t>& range) {
+        const int threadIndex = (int)TaskScheduler::threadIndex();
+        for (size_t i = range.begin(); i<range.end(); i++)
+            renderTileStandard((int)i, threadIndex, (int*)pixels_, width_, height_, v1_, v2_, numTilesX, numTilesY);
+    });
+
+    glDrawPixels(width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
+
+    glfwSwapBuffers(window_);
+
+}
+
 void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels, const unsigned int width, const unsigned int height, const Vec3fa & v1, const Vec3fa & v2, const int numTilesX, const int numTilesY)
 {
 
@@ -256,7 +256,7 @@ void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels
             ray.tnear() = mask ? 0.0f : (float)(1000000);
             ray.tfar = mask ? (float)(1000000) : (float)(-100000);
         }
-        init_Ray(ray, Vec3fa(10.16, 10.16, 10.16), Vec3fa(normalize((float)x*Vec3fa(-0.7, 0.0, 0.7) + (float)y*Vec3fa(-0.4, 0.81, 0.4) + Vec3fa(137, -356.824, -224.309))), ray.tnear(), ray.tfar, y*x);
+        init_Ray(ray, Vec3fa(10.16, 10.16, -10.16), Vec3fa(normalize((float)x*Vec3fa(-0.7, 0.0, -0.7) + (float)y*Vec3fa(-0.4, 0.81, 0.4) + Vec3fa(137, -356.824, 224.309))), ray.tnear(), ray.tfar, y*x);
 
     }
 
