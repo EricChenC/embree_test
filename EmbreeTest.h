@@ -15,6 +15,7 @@
 #include "../common/math/vec3.h"
 #include "../common/math/vec3fa.h"
 
+
 #include "GL/glew.h"
 #include <glfw/glfw3.h>
 
@@ -39,7 +40,7 @@ public:
     void Init();
     void Render();
 
-private:
+public:
     void* alignedMalloc(size_t size, size_t align);
 
     unsigned int addCube(RTCScene scene_i);
@@ -51,7 +52,7 @@ private:
     void InitScene();
     void InitGeometry();
 
-private:
+public:
     /*! Ray structure. */
     struct  Ray
     {
@@ -126,6 +127,18 @@ private:
         const int numTilesY);
 
 
+    void resize(unsigned width, unsigned height);
+
+
+    void reshapeFunc(GLFWwindow* window, int, int)
+    {
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        resize(width, height);
+        glViewport(0, 0, width, height);
+        width_ = width; height_ = height;
+    }
+
 
 private:
     RTCDevice device_;
@@ -146,7 +159,7 @@ private:
 
     unsigned int height_ = 600;
 
-    int* pixels_;
+    unsigned* pixels_;
 
     GLFWwindow* window_;
 

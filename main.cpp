@@ -7,8 +7,6 @@ int main() {
     EmbreeTest test;
 
     test.Init();
-    test.Render();
-
 
     std::cout << "embree test \n";
 

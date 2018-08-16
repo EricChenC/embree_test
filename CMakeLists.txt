@@ -36,6 +36,7 @@ embree3
 glfw3
 tbb
 glew32d
+opengl32
 )
 
 

@@ -1,8 +1,8 @@
 #include "EmbreeTest.h"
 
+
 #include "../common/algorithms/parallel_for.h"
 #include "../common/tasking/taskschedulertbb.h"
-
 
 
 
@@ -42,17 +42,31 @@ EmbreeTest::~EmbreeTest()
 void EmbreeTest::InitWindow()
 {
 
-    glfwInit();
-    glewInit();
+    if (glfwInit() != GLFW_TRUE) return;
+
+    std::cout << "glfw Init success!\n";
+    
+
+    if(glewInit() != GLFW_TRUE) return;
+
+    std::cout << "glew Init success!\n";
 
 
-    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-    glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-    glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-    glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-    glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-    window_ = glfwCreateWindow(mode->width, mode->height, "embree3 test", monitor, nullptr);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+
+    window_ = glfwCreateWindow(width_, height_, "embree3 test", nullptr, nullptr);
+    /*glfwSetKeyCallback(window, embree::keyboardFunc);
+    glfwSetCursorPosCallback(window, embree::motionFunc);
+    glfwSetMouseButtonCallback(window, embree::clickFunc);
+    glfwSetWindowSizeCallback(window, embree::reshapeFunc);*/
+    resize(width_, height_);
+
+    glfwMakeContextCurrent(window_);
+    glfwSwapInterval(1);
+
+    reshapeFunc(window_, 0, 0);
+
 }
 
 void EmbreeTest::InitDevice()
@@ -86,12 +100,12 @@ void EmbreeTest::Render()
     parallel_for(size_t(0), size_t(numTilesX*numTilesY), [&](const range<size_t>& range) {
         const int threadIndex = (int)TaskScheduler::threadIndex();
         for (size_t i = range.begin(); i<range.end(); i++)
-            renderTileStandard((int)i, threadIndex, pixels_, width_, height_, v1_, v2_, numTilesX, numTilesY);
+            renderTileStandard((int)i, threadIndex, (int*)pixels_, width_, height_, v1_, v2_, numTilesX, numTilesY);
     });
 
-    //glDrawPixels(width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
+    glDrawPixels(width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
 
-    //glfwSwapBuffers(window_);
+    glfwSwapBuffers(window_);
 
     std::cout << "draw \n";
 
@@ -105,6 +119,19 @@ void EmbreeTest::Init()
     InitGeometry();
 
     rtcCommitScene(scene_);
+
+
+    while (!glfwWindowShouldClose(window_))
+    {
+        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
+        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
+        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application.
+        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
+        glfwPollEvents();
+
+        Render();
+    }
+
 }
 
 void* EmbreeTest::alignedMalloc(size_t size, size_t align)
@@ -226,8 +253,8 @@ void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels
         /* initialize ray */
         Ray& ray = rays[N++];
         bool mask = 1; { // invalidates inactive rays
-            ray.tnear() = mask ? 0.0f : (float)(pos_inf);
-            ray.tfar = mask ? (float)(inf) : (float)(neg_inf);
+            ray.tnear() = mask ? 0.0f : (float)(1000000);
+            ray.tfar = mask ? (float)(1000000) : (float)(-100000);
         }
         init_Ray(ray, v1, Vec3fa(0, 2, 6), ray.tnear(), ray.tfar, y*x);
 
@@ -258,7 +285,7 @@ void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels
             Vec3fa lightDir = normalize(Vec3fa(-1, -1, -1));
 
             /* initialize shadow ray */
-            Ray shadow(ray.org + ray.tfar*ray.dir, Vec3f(-1.0f, -1.0f, -1.0f), 0.001f, inf, 0.0f);
+            Ray shadow(ray.org + ray.tfar*ray.dir, Vec3f(-1.0f, -1.0f, -1.0f), 0.001f, 1000000, 0.0f);
 
             /* trace shadow ray */
             rtcOccluded1(scene_, &context, (RTCRay*)&shadow);
@@ -275,6 +302,15 @@ void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels
         pixels[y*width + x] = (b << 16) + (g << 8) + r;
     }
 
+}
+
+void EmbreeTest::resize(unsigned width, unsigned height)
+{
+
+    //if (pixels_) _aligned_free(pixels_);
+    width_ = width;
+    height_ = height;
+    pixels_ = (unsigned*)alignedMalloc(width*height * sizeof(unsigned), 64);
 }
 
 
