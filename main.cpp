@@ -8,7 +8,5 @@ int main() {
 
     test.Init();
 
-    std::cout << "embree test \n";
-
     return 0;
 }

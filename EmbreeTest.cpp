@@ -31,6 +31,8 @@ void error_handler(void* userPtr, const RTCError code, const char* str = nullptr
 
 
 EmbreeTest::EmbreeTest()
+    : v1_(0.0f, 2.0f, 6.0f)
+    , v2_(0.0f, 0.0f, 0.0f)
 {
     rtcore_ = "benchmark=1,start_threads=1";
 }
@@ -106,8 +108,6 @@ void EmbreeTest::Render()
     glDrawPixels(width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels_);
 
     glfwSwapBuffers(window_);
-
-    std::cout << "draw \n";
 
 }
 
@@ -256,7 +256,7 @@ void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels
             ray.tnear() = mask ? 0.0f : (float)(1000000);
             ray.tfar = mask ? (float)(1000000) : (float)(-100000);
         }
-        init_Ray(ray, v1, Vec3fa(0, 2, 6), ray.tnear(), ray.tfar, y*x);
+        init_Ray(ray, Vec3fa(10.16, 10.16, 10.16), Vec3fa(normalize((float)x*Vec3fa(-0.7, 0.0, 0.7) + (float)y*Vec3fa(-0.4, 0.81, 0.4) + Vec3fa(137, -356.824, -224.309))), ray.tnear(), ray.tfar, y*x);
 
     }
 
