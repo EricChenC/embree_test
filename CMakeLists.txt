@@ -18,6 +18,7 @@ ${DEPS}/glfw/lib
 ${DEPS}/embree_3.0/lib
 ${DEPS}/tbb/lib/intel64/vc14
 ${DEPS}/glew-1.12.0/lib/Debug/x64
+${DEPS}/glew-1.12.0/lib/Release/x64
 )
 
 FIND_PACKAGE(OpenGL)
@@ -35,7 +36,8 @@ embree3_test
 embree3
 glfw3
 tbb
-glew32d
+debug glew32d
+optimized glew32
 opengl32
 )
 
