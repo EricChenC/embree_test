@@ -282,7 +282,7 @@ void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels
         {
             Vec3fa diffuse = face_colors[ray.primID];
             color = color + diffuse * 0.5f;
-            Vec3fa lightDir = normalize(Vec3fa(-1, -1, -1));
+            Vec3fa lightDir = normalize(Vec3fa(1, -1, -1));
 
             /* initialize shadow ray */
             Ray shadow(ray.org + ray.tfar*ray.dir, -lightDir, 0.001f, 1000000.0f, 0.0f);
