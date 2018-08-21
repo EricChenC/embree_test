@@ -267,7 +267,6 @@ void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels
     /* trace stream of rays */
     rtcIntersect1M(scene_, &context, (RTCRayHit*)&rays[0], N, sizeof(Ray));
 
-
     /* shade stream of rays */
     N = 0;
     for (unsigned int y = y0; y<y1; y++) for (unsigned int x = x0; x<x1; x++)
@@ -282,7 +281,7 @@ void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels
         {
             Vec3fa diffuse = face_colors[ray.primID];
             color = color + diffuse * 0.5f;
-            Vec3fa lightDir = normalize(Vec3fa(1, -1, -1));
+            Vec3fa lightDir = normalize(Vec3fa(-1, -1, -1));
 
             /* initialize shadow ray */
             Ray shadow(ray.org + ray.tfar*ray.dir, -lightDir, 0.001f, 1000000.0f, 0.0f);
