@@ -34,6 +34,11 @@ add_executable(embree3_test ${SOURCE})
 target_link_libraries(
 embree3_test 
 embree3
+lexers
+math
+simd
+sys
+tasking
 glfw3
 tbb
 debug glew32d

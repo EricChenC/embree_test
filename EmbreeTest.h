@@ -14,6 +14,7 @@
 
 #include "../common/math/vec3.h"
 #include "../common/math/vec3fa.h"
+#include "../common/math/constants.h"
 
 
 #include "GL/glew.h"
@@ -64,7 +65,7 @@ public:
         __forceinline Ray(const embree::Vec3fa& org,
             const embree::Vec3fa& dir,
             float tnear = 0,
-            float tfar = 1000000,
+            float tfar = embree::inf,
             float time = 0,
             int mask = -1,
             unsigned int geomID = RTC_INVALID_GEOMETRY_ID,
@@ -105,7 +106,7 @@ public:
         const embree::Vec3fa& org,
         const embree::Vec3fa& dir,
         float tnear = 0,
-        float tfar = 1000000,
+        float tfar = embree::inf,
         float time = 0,
         int mask = -1,
         unsigned int geomID = RTC_INVALID_GEOMETRY_ID,

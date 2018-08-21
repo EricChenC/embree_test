@@ -253,8 +253,8 @@ void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels
         /* initialize ray */
         Ray& ray = rays[N++];
         bool mask = 1; { // invalidates inactive rays
-            ray.tnear() = mask ? 0.0f : (float)(1000000);
-            ray.tfar = mask ? (float)(1000000) : (float)(-100000);
+            ray.tnear() = mask ? 0.0f : (float)(embree::inf);
+            ray.tfar = mask ? (float)(embree::inf) : (float)(embree::neg_inf);
         }
         init_Ray(ray, Vec3fa(4.18, 2.806, -1.19), Vec3fa(normalize((float)x*Vec3fa(-0.09, 0.0, -0.99) + (float)y*Vec3fa(-0.437, 0.89, 0.04) + Vec3fa(-92.36, -342.51, 266.00))), ray.tnear(), ray.tfar, y*x);
 
@@ -284,7 +284,7 @@ void EmbreeTest::renderTileStandard(int taskIndex, int threadIndex, int * pixels
             Vec3fa lightDir = normalize(Vec3fa(-1, -1, -1));
 
             /* initialize shadow ray */
-            Ray shadow(ray.org + ray.tfar*ray.dir, -lightDir, 0.001f, 1000000.0f, 0.0f);
+            Ray shadow(ray.org + ray.tfar*ray.dir, -lightDir, 0.001f, embree::inf, 0.0f);
 
             /* trace shadow ray */
             rtcOccluded1(scene_, &context, (RTCRay*)&shadow);
