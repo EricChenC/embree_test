@@ -17,7 +17,7 @@
 #include "../common/math/constants.h"
 
 
-#include "GL/glew.h"
+//#include "GL/glew.h"
 #include <glfw/glfw3.h>
 
 #include <string>

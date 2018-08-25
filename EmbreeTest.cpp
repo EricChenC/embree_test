@@ -49,7 +49,7 @@ void EmbreeTest::InitWindow()
     std::cout << "glfw Init success!\n";
     
 
-    if(glewInit() != GLFW_TRUE) return;
+    //if(glewInit() != GLFW_TRUE) return;
 
     std::cout << "glew Init success!\n";
 

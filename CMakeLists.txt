@@ -8,17 +8,14 @@ include_directories(
 ${DEPS}/glfw/include 
 ${DEPS}/glm
 ${DEPS}
-${DEPS}/embree_3.0/include
-${DEPS}/tbb_4.4/include
-${DEPS}/glew-1.12.0/include
+${DEPS}/embree-3.0/include
+${DEPS}/tbb/include
 )
 
 link_directories(
-${DEPS}/glfw/lib
-${DEPS}/embree_3.0/lib
-${DEPS}/tbb_4.4/lib/intel64/vc14
-${DEPS}/glew-1.12.0/lib/Debug/x64
-${DEPS}/glew-1.12.0/lib/Release/x64
+${DEPS}/glfw/lib-vc2015
+${DEPS}/embree-3.0/lib
+${DEPS}/tbb/lib/intel64/vc14
 )
 
 FIND_PACKAGE(OpenGL)
@@ -39,10 +36,9 @@ math
 simd
 sys
 tasking
-glfw3
+debug glfw3dll
+optimized glfw3
 tbb
-debug glew32d
-optimized glew32
 opengl32
 )
 
