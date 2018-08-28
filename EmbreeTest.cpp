@@ -271,25 +271,6 @@ unsigned int EmbreeTest::addGroundPlane(RTCScene scene_i)
 void EmbreeTest::Render()
 {
 
-    /*auto instance_t0 = glm::translate(glm::mat4(1.0), glm::vec3(2.0f, 0.0f, 0.0f));
-    auto instance_t1 = glm::translate(glm::mat4(1.0), glm::vec3(0.0f, 2.0f, 0.0f));
-    auto instance_t2 = glm::translate(glm::mat4(1.0), glm::vec3(0.0f, 0.0f, 2.0f));
-    auto instance_t3 = glm::translate(glm::mat4(1.0), glm::vec3(2.0f, 2.0f, 2.0f));
-
-
-    rtcSetGeometryTransform(instance0_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t0[0][0]);
-    rtcSetGeometryTransform(instance1_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t1[0][0]);
-    rtcSetGeometryTransform(instance2_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t2[0][0]);
-    rtcSetGeometryTransform(instance3_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t3[0][0]);
-
-    rtcCommitGeometry(instance0_);
-    rtcCommitGeometry(instance1_);
-    rtcCommitGeometry(instance2_);
-    rtcCommitGeometry(instance3_);
-
-    rtcCommitScene(scene_);*/
-
-
     const int numTilesX = (width_ + TILE_SIZE_X - 1) / TILE_SIZE_X;
     const int numTilesY = (height_ + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
     parallel_for(size_t(0), size_t(numTilesX*numTilesY), [&](const range<size_t>& range) {
