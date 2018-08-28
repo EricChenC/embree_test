@@ -146,6 +146,16 @@ private:
 
     RTCScene scene_;
 
+    RTCScene instance_scene_;
+
+    RTCGeometry instance0_;
+
+    RTCGeometry instance1_;
+
+    RTCGeometry instance2_;
+
+    RTCGeometry instance3_;
+
     std::string rtcore_;
 
     Vec3fa* face_colors = nullptr;

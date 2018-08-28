@@ -4,6 +4,8 @@
 #include "../common/algorithms/parallel_for.h"
 #include "../common/tasking/taskschedulertbb.h"
 
+#include "glm/gtc/matrix_transform.hpp"
+
 
 
 void error_handler(void* userPtr, const RTCError code, const char* str = nullptr)
@@ -87,11 +89,63 @@ void EmbreeTest::InitScene()
 
 void EmbreeTest::InitGeometry()
 {
+
+    instance_scene_ = rtcNewScene(device_);
+
     /* add cube */
-    addCube(scene_);
+    addCube(instance_scene_);
+
+    rtcCommitScene(instance_scene_);
+
+
+    instance0_ = rtcNewGeometry(device_, RTC_GEOMETRY_TYPE_INSTANCE);
+    rtcSetGeometryInstancedScene(instance0_, instance_scene_);
+    rtcSetGeometryTimeStepCount(instance0_, 1);
+
+    instance1_ = rtcNewGeometry(device_, RTC_GEOMETRY_TYPE_INSTANCE);
+    rtcSetGeometryInstancedScene(instance1_, instance_scene_);
+    rtcSetGeometryTimeStepCount(instance1_, 1);
+
+    instance2_ = rtcNewGeometry(device_, RTC_GEOMETRY_TYPE_INSTANCE);
+    rtcSetGeometryInstancedScene(instance2_, instance_scene_);
+    rtcSetGeometryTimeStepCount(instance2_, 1);
+
+    instance3_ = rtcNewGeometry(device_, RTC_GEOMETRY_TYPE_INSTANCE);
+    rtcSetGeometryInstancedScene(instance3_, instance_scene_);
+    rtcSetGeometryTimeStepCount(instance3_, 1);
+
+    auto instance_t0 = glm::translate(glm::mat4(1.0), glm::vec3(0.0f, 0.0f, -4.0f));
+    auto instance_t1 = glm::translate(glm::mat4(1.0), glm::vec3(0.0f, 2.0f, 0.0f));
+    auto instance_t2 = glm::translate(glm::mat4(1.0), glm::vec3(0.0f, 1.0f, -2.0f));
+    auto instance_t3 = glm::translate(glm::mat4(1.0), glm::vec3(-1.0f, 3.0f, -3.0f));
+
+
+    rtcSetGeometryTransform(instance0_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t0[0][0]);
+    rtcSetGeometryTransform(instance1_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t1[0][0]);
+    rtcSetGeometryTransform(instance2_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t2[0][0]);
+    rtcSetGeometryTransform(instance3_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t3[0][0]);
+
+
+    rtcCommitGeometry(instance0_);
+    rtcCommitGeometry(instance1_);
+    rtcCommitGeometry(instance2_);
+    rtcCommitGeometry(instance3_);
+
+
+    rtcAttachGeometry(scene_, instance0_);
+    rtcAttachGeometry(scene_, instance1_);
+    rtcAttachGeometry(scene_, instance2_);
+    rtcAttachGeometry(scene_, instance3_);
+
+    rtcReleaseGeometry(instance0_);
+    rtcReleaseGeometry(instance1_);
+    rtcReleaseGeometry(instance2_);
+    rtcReleaseGeometry(instance3_);
+
 
     /* add ground plane */
     addGroundPlane(scene_);
+
 }
 
 void EmbreeTest::Init()
@@ -216,6 +270,25 @@ unsigned int EmbreeTest::addGroundPlane(RTCScene scene_i)
 
 void EmbreeTest::Render()
 {
+
+    /*auto instance_t0 = glm::translate(glm::mat4(1.0), glm::vec3(2.0f, 0.0f, 0.0f));
+    auto instance_t1 = glm::translate(glm::mat4(1.0), glm::vec3(0.0f, 2.0f, 0.0f));
+    auto instance_t2 = glm::translate(glm::mat4(1.0), glm::vec3(0.0f, 0.0f, 2.0f));
+    auto instance_t3 = glm::translate(glm::mat4(1.0), glm::vec3(2.0f, 2.0f, 2.0f));
+
+
+    rtcSetGeometryTransform(instance0_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t0[0][0]);
+    rtcSetGeometryTransform(instance1_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t1[0][0]);
+    rtcSetGeometryTransform(instance2_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t2[0][0]);
+    rtcSetGeometryTransform(instance3_, 0, RTC_FORMAT_FLOAT4X4_COLUMN_MAJOR, (float*)&instance_t3[0][0]);
+
+    rtcCommitGeometry(instance0_);
+    rtcCommitGeometry(instance1_);
+    rtcCommitGeometry(instance2_);
+    rtcCommitGeometry(instance3_);
+
+    rtcCommitScene(scene_);*/
+
 
     const int numTilesX = (width_ + TILE_SIZE_X - 1) / TILE_SIZE_X;
     const int numTilesY = (height_ + TILE_SIZE_Y - 1) / TILE_SIZE_Y;
